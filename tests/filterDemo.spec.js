@@ -1,71 +1,38 @@
-const {test, expect, locator} = require('@playwright/test');
+const { test, expect } = require('@playwright/test');
+
+async function login(page) {
+  await page.goto('https://www.saucedemo.com/');
+  await page.getByPlaceholder('Username').fill('standard_user');
+  await page.getByPlaceholder('Password').fill('secret_sauce');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page).toHaveURL('https://www.saucedemo.com/inventory.html');
+}
 
 test('filterDemo', async ({ page }) => {
-    await page.goto('https://www.saucedemo.com/');
+  await login(page);
 
-    const usernameInput = page.getByPlaceholder('Username');
-    const passwordInput = page.getByPlaceholder('Password');
-    // Login button di Saucedemo biasanya bisa dideteksi dengan getByTestId atau CSS, 
-    // jika getByRole ini gagal, alternatifnya: page.locator('[data-test="login-button"]')
-    const loginButton = page.getByRole('button', { name: 'Login' }); 
-
-    await usernameInput.fill('standard_user');
-    await passwordInput.fill('secret_sauce');
-    await loginButton.click();
-
-    await expect(page).toHaveURL('https://www.saucedemo.com/inventory.html');
-
-    // PERBAIKAN: Cari container '.inventory_item' yang memiliki teks spesifik, lalu klik tombol di dalamnya
-    await page.locator('.inventory_item')
-        .filter({ hasText: 'Sauce Labs Backpack' })
-        .getByRole('button', { name: 'Add to cart' })
-        .click();
+  const backpackCard = page.locator('.inventory_item').filter({ hasText: 'Sauce Labs Backpack' });
+  await backpackCard.getByRole('button', { name: 'Add to cart' }).click();
+  await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
 });
 
 test('selecItems', async ({ page }) => {
-     await page.goto('https://www.saucedemo.com/');
+  await login(page);
 
-    const usernameInput = page.getByPlaceholder('Username');
-    const passwordInput = page.getByPlaceholder('Password');
-    // Login button di Saucedemo biasanya bisa dideteksi dengan getByTestId atau CSS, 
-    // jika getByRole ini gagal, alternatifnya: page.locator('[data-test="login-button"]')
-    const loginButton = page.getByRole('button', { name: 'Login' }); 
-
-    await usernameInput.fill('standard_user');
-    await passwordInput.fill('secret_sauce');
-    await loginButton.click();
-
-    await expect(page).toHaveURL('https://www.saucedemo.com/inventory.html');
-
-    await page.locator('.inventory_item')
-        .filter({ has: page.getByRole('link', { name: 'Sauce Labs Bike Light' }) })
-        .getByRole('button', { name: 'Add to cart' })
-        .click();
+  const bikeCard = page.locator('.inventory_item').filter({ hasText: 'Sauce Labs Bike Light' });
+  await bikeCard.getByRole('button', { name: 'Add to cart' }).click();
+  await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
 });
 
 test('detailProduct', async ({ page }) => {
-    await page.goto('https://www.saucedemo.com/');
+  await login(page);
 
-    const usernameInput = page.getByPlaceholder('Username');
-    const passwordInput = page.getByPlaceholder('Password');
-    const loginButton = page.getByRole('button', { name: 'Login' });
+  const jacketCard = page.locator('.inventory_item').filter({ hasText: 'Sauce Labs Fleece Jacket' });
+  await jacketCard.locator('.inventory_item_name').click();
 
-    await usernameInput.fill('standard_user');
-    await passwordInput.fill('secret_sauce');
-    await loginButton.click();
+  await expect(page).toHaveURL('https://www.saucedemo.com/inventory-item.html?id=5');
+  await expect(page.locator('.inventory_details_name')).toHaveText('Sauce Labs Fleece Jacket');
 
-    await expect(page).toHaveURL('https://www.saucedemo.com/inventory.html');
-
-    // PERBAIKAN: Hapus .isVisible dan langsung gunakan .getByRole untuk mencari link/judul produk
-    await page.locator('.inventory_item')
-    .filter({ hasText: 'Sauce Labs Fleece Jacket' })
-    .locator('.inventory_item_name') // Langsung targetkan teks judulnya
-    .click();
-
-    await expect(page).toHaveURL('https://www.saucedemo.com/inventory-item.html?id=5');
-
-    await page.locator('.inventory_details_desc_container')
-        .filter({ hasText: 'Sauce Labs Fleece Jacket' }) 
-        .getByRole('button', { name: 'Add to cart' }) 
-        .click();
+  await page.getByRole('button', { name: 'Add to cart' }).click();
+  await expect(page.locator('.shopping_cart_badge')).toHaveText('1');
 });
